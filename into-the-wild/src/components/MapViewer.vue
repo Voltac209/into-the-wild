@@ -49,7 +49,7 @@ export default {
                     lat: this.getNextCoordinate(this.center.lat, this.anchorCenter.lat),
                     lng: this.getNextCoordinate(this.center.lng, this.anchorCenter.lng)
                 };
-            }, 10000);
+            }, 3000);
         },
         stopMovementSimulation() {
             if (this.movementIntervalId) {
