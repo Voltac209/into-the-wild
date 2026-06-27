@@ -21,6 +21,8 @@ export default {
     data() {
         return {
             center: { lat: 29.55, lng: 78.88 },
+            anchorCenter: null,
+            movementIntervalId: null,
             API_KEY: process.env.VUE_APP_API_KEY
         };
     },
@@ -28,16 +30,53 @@ export default {
         getCoords() {
             const coords = this.$bus.getData();
             if (coords) {
-                this.center = { lat: coords.lat, lng: coords.lng };
+                this.setTrackedPosition(coords);
             }
+        },
+        setTrackedPosition(coords) {
+            this.anchorCenter = { lat: coords.lat, lng: coords.lng };
+            this.center = { lat: coords.lat, lng: coords.lng };
+            this.startMovementSimulation();
+        },
+        startMovementSimulation() {
+            this.stopMovementSimulation();
+            this.movementIntervalId = window.setInterval(() => {
+                if (!this.anchorCenter) {
+                    return;
+                }
+
+                this.center = {
+                    lat: this.getNextCoordinate(this.center.lat, this.anchorCenter.lat),
+                    lng: this.getNextCoordinate(this.center.lng, this.anchorCenter.lng)
+                };
+            }, 10000);
+        },
+        stopMovementSimulation() {
+            if (this.movementIntervalId) {
+                window.clearInterval(this.movementIntervalId);
+                this.movementIntervalId = null;
+            }
+        },
+        getNextCoordinate(currentValue, anchorValue) {
+            const maxOffset = 0.01;
+            const step = (Math.random() - 0.5) * 0.002;
+            const nextValue = currentValue + step;
+
+            return Math.min(
+                anchorValue + maxOffset,
+                Math.max(anchorValue - maxOffset, nextValue)
+            );
         }
     },
     watch: {
         '$bus.data'(newData) {
             if (newData) {
-                this.center = { lat: newData.lat, lng: newData.lng };
+                this.setTrackedPosition(newData);
             }
         }
+    },
+    beforeUnmount() {
+        this.stopMovementSimulation();
     }
 }
 </script>  
